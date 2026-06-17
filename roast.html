@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독설 AI 콘설턴트</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Inter:wght@400;600;700&display=swap');
+        * { font-family: 'Pretendard', 'Inter', sans-serif; }
+
+        :root {
+            --brand: #6366f1;
+            --brand2: #8b5cf6;
+            --brand3: #a78bfa;
+        }
+
+        body { background: #f8f7ff; }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+        }
+
+        .card-hover {
+            transition: all 0.2s cubic-bezier(.22,1,.36,1);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(99,102,241,0.15);
+        }
+
+        .cat-btn {
+            transition: all 0.18s ease;
+            cursor: pointer;
+        }
+        .cat-btn:hover { transform: scale(1.04); }
+        .cat-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+        }
+
+        .thinking-dot {
+            animation: thinking 1.4s infinite both;
+        }
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes thinking {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up { animation: slide-up 0.45s cubic-bezier(.22,1,.36,1); }
+
+        .result-block {
+            animation: slide-up 0.4s ease both;
+        }
+        .result-block:nth-child(2) { animation-delay: 0.08s; }
+        .result-block:nth-child(3) { animation-delay: 0.16s; }
+        .result-block:nth-child(4) { animation-delay: 0.24s; }
+
+        textarea:focus { outline: none; }
+
+        .badge-cat {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        /* API 키 모달 */
+        #api-overlay {
+            backdrop-filter: blur(8px);
+        }
+
+        @keyframes pop-in {
+            from { opacity: 0; transform: scale(0.92); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        #api-modal { animation: pop-in 0.3s ease; }
+
+        /* 히스토리 아이템 */
+        .history-item {
+            border-left: 3px solid #e0e7ff;
+            transition: border-color 0.15s;
+        }
+        .history-item:hover { border-left-color: #6366f1; }
+
+        /* 별점 */
+        .star { cursor: pointer; transition: transform 0.1s; }
+        .star:hover { transform: scale(1.2); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============================================================ API 키 설정 모달 ============================================================ -->
+<div id="api-overlay" style="display:flex;position:fixed;inset:0;z-index:50;background:rgba(15,23,42,0.5);align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);">
+    <div id="api-modal" class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="gradient-bg p-6 text-white text-center">
+            <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="brain-circuit" class="w-8 h-8 text-white"></i>
+            </div>
+            <h2 class="text-2xl font-bold">독설 AI 콘설턴트</h2>
+            <p class="text-indigo-200 text-sm mt-1">AI가 당신의 고민을 낱낱이 까발려드립니다 😈</p>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-sm text-slate-600 space-y-2">
+                <p class="font-semibold text-indigo-700 flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-4 h-4"></i> 무료 API 키 발급 방법 (Groq)
+                </p>
+                <ol class="list-decimal list-inside space-y-1 text-xs leading-relaxed">
+                    <li><span class="font-semibold">console.groq.com</span> 접속 (Google 계정으로 가입)</li>
+                    <li>좌측 메뉴 <span class="font-semibold">[API Keys]</span> → <span class="font-semibold">[Create API key]</span></li>
+                    <li>키 복사 (<span class="font-semibold">gsk_</span>로 시작)</li>
+                    <li>아래에 붙여넣기 후 시작! (하루 14,400회 무료)</li>
+                </ol>
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Gemini API 키</label>
+                <div class="relative">
+                    <input type="password" id="api-key-input" placeholder="AIza..." class="w-full pl-4 pr-10 py-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:border-indigo-400 transition-all" />
+                    <button onclick="toggleKeyVis()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+                        <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+                    </button>
+                </div>
+            </div>
+            <button onclick="startApp()" class="w-full gradient-bg text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                <i data-lucide="rocket" class="w-4 h-4"></i> 까여볼 준비 됐어? 시작하기
+            </button>
+            <p class="text-center text-[11px] text-slate-400">입력한 API 키는 브라우저에만 저장되며 서버로 전송되지 않습니다.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ 메인 앱 ============================================================ -->
+<div id="app" style="display:none;min-height:100vh;flex-direction:column;">
+
+    <!-- 헤더 -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 gradient-bg rounded-xl flex items-center justify-center">
+                    <i data-lucide="brain-circuit" class="w-4 h-4 text-white"></i>
+                </div>
+                <span class="font-bold text-lg text-slate-900">일상 AI 콘설턴트</span>
+                <span class="text-[10px] font-bold bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">AI LIVE</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-400 font-mono hidden sm:block" id="live-time"></span>
+                <button onclick="openHistory()" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all relative">
+                    <i data-lucide="history" class="w-4 h-4"></i>
+                    <span id="history-badge" class="hidden absolute -top-0.5 -right-0.5 w-4 h-4 bg-indigo-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"></span>
+                </button>
+
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-8">
+
+        <!-- 히어로 -->
+        <div class="gradient-bg rounded-3xl p-7 md:p-10 text-white relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-4 right-8 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+                <div class="absolute bottom-4 left-16 w-24 h-24 bg-white rounded-full blur-2xl"></div>
+            </div>
+            <div class="relative z-10 space-y-3">
+                <p class="text-indigo-200 text-sm font-semibold uppercase tracking-widest">AI-Powered Daily Consultant</p>
+                <h1 class="text-3xl md:text-4xl font-black leading-tight">
+                    어떤 고민이든<br>AI가 함께 생각합니다
+                </h1>
+                <p class="text-indigo-200 max-w-md text-sm leading-relaxed">
+                    직장, 인간관계, 건강, 금융 — 일상 속 모든 고민을 구체적으로 분석하고 실천 가능한 해결책을 제시해드립니다.
+                </p>
+                <div class="flex items-center gap-2 pt-2">
+                    <div class="flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-full text-xs font-semibold">
+                        <span class="w-2 h-2 bg-red-400 rounded-full animate-ping"></span>
+                        독설 AI 실시간 연동
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-full text-xs font-semibold">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                        팩폭 무제한
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 카테고리 선택 -->
+        <div class="space-y-3">
+            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">고민 카테고리 선택</h2>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3" id="cat-grid"></div>
+        </div>
+
+        <!-- 고민 입력 -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 md:p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">
+                        <span id="selected-cat-icon" class="text-xl">💭</span>
+                        <span id="selected-cat-label">고민 내용 입력</span>
+                    </h2>
+                    <span id="char-count" class="text-xs font-mono text-slate-400">0 / 500</span>
+                </div>
+                <textarea
+                    id="concern-input"
+                    maxlength="500"
+                    rows="5"
+                    placeholder="고민을 자세히 적어주세요. 상황, 감정, 원하는 결과를 구체적으로 쓸수록 더 좋은 조언을 받을 수 있어요.&#10;&#10;예) 직장 동료와 의견 충돌이 자주 생겨서 업무 분위기가 불편합니다. 어떻게 하면 좋을까요?"
+                    oninput="updateCount()"
+                    class="w-full text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 resize-none focus:bg-white focus:border-indigo-400 transition-all placeholder-slate-300"
+                ></textarea>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
+                            <input type="checkbox" id="detail-mode" class="rounded">
+                            상세 분석 모드 (더 긴 답변)
+                        </label>
+                    </div>
+                    <button onclick="askAI()" id="ask-btn" class="gradient-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        AI에게 물어보기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 로딩 -->
+        <div id="loading-area" class="hidden">
+            <div class="bg-white border border-indigo-100 rounded-2xl p-6 flex items-center gap-5 shadow-sm">
+                <div class="w-12 h-12 gradient-bg rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="brain" class="w-5 h-5 text-white"></i>
+                </div>
+                <div class="space-y-2">
+                    <p class="text-sm font-bold text-slate-800">AI가 고민을 분석하고 있습니다...</p>
+                    <div class="flex gap-1.5">
+                        <span class="w-2 h-2 bg-indigo-400 rounded-full thinking-dot"></span>
+                        <span class="w-2 h-2 bg-indigo-400 rounded-full thinking-dot"></span>
+                        <span class="w-2 h-2 bg-indigo-400 rounded-full thinking-dot"></span>
+                    </div>
+                    <p class="text-xs text-slate-400" id="loading-tip"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 결과 -->
+        <div id="result-area" class="hidden space-y-4 slide-up">
+            <div class="flex items-center justify-between">
+                <h2 class="font-bold text-slate-800 text-lg">🤖 AI 콘설턴트 분석 결과</h2>
+                <div class="flex items-center gap-2">
+                    <span id="result-time" class="text-[11px] text-slate-400 font-mono"></span>
+                    <button onclick="copyResult()" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-indigo-50 transition-all">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 요약 카드 -->
+            <div id="r-summary" class="result-block bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-5 space-y-2">
+                <p class="text-xs font-bold text-indigo-500 uppercase tracking-wide flex items-center gap-1.5">
+                    <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i> 핵심 요약
+                </p>
+                <p id="r-summary-text" class="text-slate-700 text-sm leading-relaxed font-medium"></p>
+            </div>
+
+            <!-- 분석 -->
+            <div id="r-analysis" class="result-block bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i> 상황 분석
+                </p>
+                <div id="r-analysis-text" class="text-slate-600 text-sm leading-relaxed space-y-2"></div>
+            </div>
+
+            <!-- 해결책 -->
+            <div id="r-solutions" class="result-block bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                    <i data-lucide="list-checks" class="w-3.5 h-3.5"></i> 실천 가능한 해결책
+                </p>
+                <div id="r-solutions-text" class="space-y-2.5"></div>
+            </div>
+
+            <!-- 한줄 조언 -->
+            <div id="r-oneliner" class="result-block gradient-bg rounded-2xl p-5 text-white flex items-start gap-4">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i data-lucide="quote" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-indigo-200 uppercase tracking-wide mb-1.5">AI의 한마디</p>
+                    <p id="r-oneliner-text" class="text-white font-bold text-base leading-snug"></p>
+                </div>
+            </div>
+
+            <!-- 별점/피드백 -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-600">이 답변이 도움이 되었나요?</p>
+                <div class="flex items-center gap-1" id="star-area">
+                    <span class="star text-2xl" onclick="rateStar(1)" data-v="1">☆</span>
+                    <span class="star text-2xl" onclick="rateStar(2)" data-v="2">☆</span>
+                    <span class="star text-2xl" onclick="rateStar(3)" data-v="3">☆</span>
+                    <span class="star text-2xl" onclick="rateStar(4)" data-v="4">☆</span>
+                    <span class="star text-2xl" onclick="rateStar(5)" data-v="5">☆</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 에러 -->
+        <div id="error-area" class="hidden bg-red-50 border border-red-200 rounded-2xl p-5 flex items-start gap-3 slide-up">
+            <div class="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-red-700 mb-1">오류가 발생했습니다</p>
+                <p id="error-msg" class="text-xs text-red-500 leading-relaxed"></p>
+                <button onclick="resetKey()" class="mt-2 text-xs font-bold text-red-600 underline">API 키 재설정</button>
+            </div>
+        </div>
+
+        <!-- 이용 통계 -->
+        <div class="grid grid-cols-3 gap-4" id="stats-area">
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center card-hover">
+                <p class="text-2xl font-black text-indigo-600" id="stat-count">0</p>
+                <p class="text-xs text-slate-400 font-medium mt-1">오늘 분석한 고민</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center card-hover">
+                <p class="text-2xl font-black text-purple-600" id="stat-avg">-</p>
+                <p class="text-xs text-slate-400 font-medium mt-1">평균 응답 시간</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center card-hover">
+                <p class="text-2xl font-black text-violet-600" id="stat-top">-</p>
+                <p class="text-xs text-slate-400 font-medium mt-1">가장 많은 카테고리</p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="border-t border-slate-200 bg-white py-5 text-center">
+        <p class="text-xs text-slate-400">독설 AI 콘설턴트 · 상처받을 각오하고 쓰세요 😈</p>
+        <p class="text-xs text-slate-400 mt-1">개발자 · 서동건</p>
+        <p class="text-xs text-slate-300 mt-1">Powered by Google Gemini API · AI의 답변은 참고용이며 전문가 상담을 대체하지 않습니다</p>
+    </footer>
+</div>
+
+<!-- 히스토리 사이드패널 -->
+<div id="history-panel" style="position:fixed;top:0;right:0;bottom:0;z-index:40;width:320px;background:white;border-left:1px solid #e2e8f0;box-shadow:-4px 0 32px rgba(0,0,0,0.12);transform:translateX(100%);transition:transform 0.3s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;">
+    <div style="padding:20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px;font-size:14px;">
+            📋 상담 히스토리
+        </h3>
+        <button onclick="closeHistory()" style="color:#94a3b8;padding:4px;border-radius:8px;background:none;border:none;cursor:pointer;font-size:18px;line-height:1;">✕</button>
+    </div>
+    <div id="history-list" style="flex:1;overflow-y:auto;padding:16px;">
+        <p style="font-size:12px;color:#94a3b8;text-align:center;padding:32px 0;">아직 상담 기록이 없습니다.</p>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #f1f5f9;">
+        <button onclick="clearHistory()" style="width:100%;font-size:12px;color:#f87171;background:none;border:none;cursor:pointer;font-weight:500;">히스토리 전체 삭제</button>
+    </div>
+</div>
+<div id="history-backdrop" style="display:none;position:fixed;inset:0;z-index:30;background:rgba(15,23,42,0.2);" onclick="closeHistory()"></div>
+
+<!-- 설정 모달 -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+    <div style="background:white;border-radius:20px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="font-weight:700;font-size:15px;color:#1e293b;">⚙️ 설정</h3>
+            <button onclick="closeSettings()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;">✕</button>
+        </div>
+        <div style="padding:20px;space-y:12px;">
+            <div style="background:#f8f7ff;border:1px solid #e0e7ff;border-radius:12px;padding:12px 16px;margin-bottom:12px;">
+                <p style="font-size:11px;color:#6366f1;font-weight:700;margin-bottom:4px;">현재 API 키</p>
+                <p id="current-key-display" style="font-size:12px;color:#64748b;font-family:monospace;word-break:break-all;"></p>
+            </div>
+            <button onclick="confirmResetKey()" style="width:100%;padding:10px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+                🔑 API 키 변경하기
+            </button>
+            <button onclick="closeSettings()" style="width:100%;padding:10px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">
+                닫기
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 토스트 -->
+<div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[70]">
+    <div class="bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-white/10">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toast-msg"></span>
+    </div>
+</div>
+
+<script>
+    /* ===== 카테고리 데이터 ===== */
+    const CATEGORIES = [
+        { id: 'work',     icon: '💼', label: '직장/진로', color: 'bg-blue-50 border-blue-200 text-blue-700',   prompt: '직장 및 진로' },
+        { id: 'relation', icon: '❤️', label: '인간관계',  color: 'bg-rose-50 border-rose-200 text-rose-700',   prompt: '인간관계' },
+        { id: 'health',   icon: '🌿', label: '건강/생활', color: 'bg-green-50 border-green-200 text-green-700', prompt: '건강 및 생활습관' },
+        { id: 'money',    icon: '💰', label: '금융/절약', color: 'bg-amber-50 border-amber-200 text-amber-700', prompt: '금융 및 재정' },
+        { id: 'study',    icon: '📚', label: '학습/공부', color: 'bg-violet-50 border-violet-200 text-violet-700', prompt: '학습 및 자기계발' },
+        { id: 'etc',      icon: '💭', label: '기타',      color: 'bg-slate-50 border-slate-200 text-slate-700',  prompt: '일상' },
+    ];
+
+    const LOADING_TIPS = [
+        '상황을 깊이 분석 중입니다...',
+        '최적의 해결책을 탐색하고 있어요...',
+        '실천 가능한 조언을 준비하고 있습니다...',
+        '여러 관점을 종합하고 있어요...',
+    ];
+
+    let selectedCat = CATEGORIES[5];
+    let sessionStats = { count: 0, totalMs: 0, catCount: {} };
+    let consultHistory = JSON.parse(localStorage.getItem('ai_history') || '[]');
+    let apiKey = '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';
+
+    /* ===== 초기화 ===== */
+    window.onload = function() {
+        renderCategories();
+        updateHistoryBadge();
+        setInterval(() => {
+            const el = document.getElementById('live-time');
+            if (el) {
+                const n = new Date();
+                el.innerText = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+            }
+        }, 1000);
+        document.getElementById('api-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('app').style.flexDirection = 'column';
+        lucide.createIcons();
+    };
+
+    function renderCategories() {
+        const grid = document.getElementById('cat-grid');
+        grid.innerHTML = CATEGORIES.map(c => `
+            <button onclick="selectCat('${c.id}')" data-cat="${c.id}"
+                class="cat-btn border rounded-2xl p-3 flex flex-col items-center gap-1.5 ${c.color} ${c.id === selectedCat.id ? 'active' : ''}">
+                <span class="text-2xl">${c.icon}</span>
+                <span class="text-[11px] font-bold">${c.label}</span>
+            </button>
+        `).join('');
+    }
+
+    function selectCat(id) {
+        selectedCat = CATEGORIES.find(c => c.id === id);
+        document.querySelectorAll('.cat-btn').forEach(b => {
+            const c = CATEGORIES.find(x => x.id === b.dataset.cat);
+            if (b.dataset.cat === id) {
+                b.className = `cat-btn border rounded-2xl p-3 flex flex-col items-center gap-1.5 active`;
+            } else {
+                b.className = `cat-btn border rounded-2xl p-3 flex flex-col items-center gap-1.5 ${c.color}`;
+            }
+        });
+        document.getElementById('selected-cat-icon').innerText = selectedCat.icon;
+        document.getElementById('selected-cat-label').innerText = `${selectedCat.label} 고민 입력`;
+        document.getElementById('concern-input').placeholder = `${selectedCat.label} 관련 고민을 자세히 적어주세요...\n\n상황, 감정, 원하는 결과를 구체적으로 쓸수록 더 좋은 조언을 받을 수 있어요.`;
+    }
+
+    function updateCount() {
+        const v = document.getElementById('concern-input').value.length;
+        document.getElementById('char-count').innerText = `${v} / 500`;
+    }
+
+    /* ===== API 키 설정 ===== */
+    function startApp() {
+        const key = document.getElementById('api-key-input').value.trim();
+        if (!key || key.length < 10) {
+            shakeEl('api-key-input');
+            showToast('API 키를 입력해주세요.');
+            return;
+        }
+        apiKey = key;
+        document.getElementById('api-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('app').style.flexDirection = 'column';
+        lucide.createIcons();
+    }
+
+    function resetKey() {
+        apiKey = '';
+        document.getElementById('api-overlay').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('api-key-input').value = '';
+    }
+
+    function toggleKeyVis() {
+        const inp = document.getElementById('api-key-input');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function shakeEl(id) {
+        const el = document.getElementById(id);
+        el.classList.add('border-red-400', 'bg-red-50');
+        setTimeout(() => el.classList.remove('border-red-400', 'bg-red-50'), 1000);
+    }
+
+    /* ===== AI 호출 ===== */
+    async function askAI() {
+        const concern = document.getElementById('concern-input').value.trim();
+        if (!concern) { shakeEl('concern-input'); return; }
+        if (concern.length < 10) {
+            showToast('고민을 조금 더 자세히 적어주세요 (10자 이상)');
+            return;
+        }
+
+        const detailMode = document.getElementById('detail-mode').checked;
+        const btn = document.getElementById('ask-btn');
+        btn.disabled = true;
+
+        hide('result-area'); hide('error-area');
+        show('loading-area');
+        rotateTip();
+        const tipInterval = setInterval(rotateTip, 2000);
+
+        const startTime = Date.now();
+
+        const systemPrompt = `너는 서동건이라는 20대 한국 남자야. 친구들한테 독설하고 놀리는 걸 즐기는 스타일이야. 말투는 짧고 툭툭 던지는 식이고, 은근슬쩍 디스하면서도 결국 도움은 줘. 한국어로 답변해.
+
+말투 규칙:
+- 짧게 툭툭 던짐 ("오", "ㄱ?", "ㅋㅋ" 같은 거 자주 씀)
+- 친구 고민 들으면 일단 한소리 함 ("씹", "ㅂㅅ", "찐따" 같은 표현 가끔 섞되 너무 심하지 않게)
+- "솔직히 네 잘못임", "당연한거 아님?" 이런 식으로 팩폭
+- 말 별로 없다가 핵심 한방에 찌름
+- 근데 결국엔 해결책은 줌 (친구니까)
+- "ㅋㅋ", "ㄹㅇ", "ㄱ?", "~임", "~거아님?" 자주 사용
+
+반드시 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
+{
+  "summary": "서동건 스타일 요약 (짧고 툭툭, 은근 디스하면서 상황 요약)",
+  "analysis": ["팩폭 포인트 1 (친구한테 하듯이)", "팩폭 포인트 2", "팩폭 포인트 3"],
+  "solutions": [
+    {"step": 1, "title": "해결책 제목", "desc": "툭툭 던지면서도 실질적인 해결책"},
+    {"step": 2, "title": "해결책 제목", "desc": "툭툭 던지면서도 실질적인 해결책"},
+    {"step": 3, "title": "해결책 제목", "desc": "툭툭 던지면서도 실질적인 해결책"}
+  ],
+  "oneliner": "서동건식 한마디 (짧고 날카롭게, ㅋㅋ 포함 가능)"
+}`;
+
+        const userMsg = `카테고리: ${selectedCat.prompt}\n\n고민 내용:\n${concern}\n\n${detailMode ? '상세 모드: 각 항목을 더 자세히 설명해주세요.' : ''}`;
+
+        try {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userMsg }
+                    ],
+                    temperature: 0.8,
+                    max_tokens: detailMode ? 1500 : 800,
+                    response_format: { type: 'json_object' }
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error?.message || `HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            const text = data.choices?.[0]?.message?.content || '';
+
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
+
+            const parsed = JSON.parse(jsonMatch[0]);
+            const elapsed = Date.now() - startTime;
+
+            clearInterval(tipInterval);
+            hide('loading-area');
+            renderResult(parsed, elapsed);
+
+            // 통계 업데이트
+            sessionStats.count++;
+            sessionStats.totalMs += elapsed;
+            sessionStats.catCount[selectedCat.label] = (sessionStats.catCount[selectedCat.label] || 0) + 1;
+            updateStats();
+
+            // 히스토리 저장
+            saveHistory(concern, parsed, elapsed);
+
+        } catch(e) {
+            clearInterval(tipInterval);
+            hide('loading-area');
+            let msg = e.message;
+            if (msg.includes('API_KEY_INVALID') || msg.includes('400')) msg = 'API 키가 올바르지 않습니다. 설정에서 다시 확인해주세요.';
+            else if (msg.includes('429')) msg = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+            document.getElementById('error-msg').innerText = msg;
+            show('error-area');
+        }
+
+        btn.disabled = false;
+    }
+
+    function renderResult(d, elapsedMs) {
+        // 요약
+        document.getElementById('r-summary-text').innerText = d.summary || '';
+
+        // 분석
+        const analysisEl = document.getElementById('r-analysis-text');
+        analysisEl.innerHTML = (d.analysis || []).map(a =>
+            `<div class="flex items-start gap-2.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></span>
+                <p>${a}</p>
+            </div>`
+        ).join('');
+
+        // 해결책
+        const solutionsEl = document.getElementById('r-solutions-text');
+        solutionsEl.innerHTML = (d.solutions || []).map(s =>
+            `<div class="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3.5">
+                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-sm flex-shrink-0">${s.step}</div>
+                <div>
+                    <p class="font-bold text-slate-800 text-sm">${s.title}</p>
+                    <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">${s.desc}</p>
+                </div>
+            </div>`
+        ).join('');
+
+        // 한마디
+        document.getElementById('r-oneliner-text').innerText = d.oneliner || '';
+
+        // 별점 리셋
+        document.querySelectorAll('.star').forEach(s => s.innerText = '☆');
+
+        // 시간
+        document.getElementById('result-time').innerText = `응답 시간 ${(elapsedMs/1000).toFixed(1)}초`;
+
+        show('result-area');
+        document.getElementById('result-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        lucide.createIcons();
+    }
+
+    function rotateTip() {
+        document.getElementById('loading-tip').innerText = LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
+    }
+
+    /* ===== 통계 ===== */
+    function updateStats() {
+        document.getElementById('stat-count').innerText = sessionStats.count;
+        if (sessionStats.count > 0) {
+            document.getElementById('stat-avg').innerText = ((sessionStats.totalMs / sessionStats.count) / 1000).toFixed(1) + 's';
+        }
+        const top = Object.entries(sessionStats.catCount).sort((a,b) => b[1]-a[1])[0];
+        if (top) document.getElementById('stat-top').innerText = top[0];
+    }
+
+    /* ===== 히스토리 ===== */
+    function saveHistory(concern, result, elapsed) {
+        const item = {
+            id: Date.now(),
+            cat: selectedCat.label,
+            icon: selectedCat.icon,
+            concern: concern.slice(0, 80) + (concern.length > 80 ? '...' : ''),
+            summary: result.summary,
+            oneliner: result.oneliner,
+            elapsed,
+            time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+        };
+        consultHistory.unshift(item);
+        if (consultHistory.length > 20) consultHistory.pop();
+        localStorage.setItem('ai_history', JSON.stringify(consultHistory));
+        updateHistoryBadge();
+        renderHistoryList();
+    }
+
+    function updateHistoryBadge() {
+        const badge = document.getElementById('history-badge');
+        if (consultHistory.length > 0) {
+            badge.classList.remove('hidden');
+            badge.innerText = Math.min(consultHistory.length, 9);
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    function openHistory() {
+        renderHistoryList();
+        document.getElementById('history-panel').style.transform = 'translateX(0)';
+        document.getElementById('history-backdrop').style.display = 'block';
+    }
+
+    function closeHistory() {
+        document.getElementById('history-panel').style.transform = 'translateX(100%)';
+        document.getElementById('history-backdrop').style.display = 'none';
+    }
+
+    function openSettings() {
+        const display = apiKey ? apiKey.slice(0,8) + '••••••••' + apiKey.slice(-4) : '(없음)';
+        document.getElementById('current-key-display').innerText = display;
+        document.getElementById('settings-modal').style.display = 'flex';
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    function confirmResetKey() {
+        closeSettings();
+        resetKey();
+    }
+
+    function renderHistoryList() {
+        const list = document.getElementById('history-list');
+        if (consultHistory.length === 0) {
+            list.innerHTML = '<p class="text-xs text-slate-400 text-center py-8">아직 상담 기록이 없습니다.</p>';
+            return;
+        }
+        list.innerHTML = consultHistory.map(h => `
+            <div class="history-item pl-3 space-y-1.5 py-2">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-sm">${h.icon}</span>
+                    <span class="text-[10px] font-bold text-indigo-500">${h.cat}</span>
+                    <span class="ml-auto text-[10px] text-slate-400 font-mono">${h.time}</span>
+                </div>
+                <p class="text-xs text-slate-700 font-medium leading-relaxed">${h.concern}</p>
+                <p class="text-[11px] text-slate-400 italic">"${h.oneliner}"</p>
+            </div>
+        `).join('');
+    }
+
+    function clearHistory() {
+        if (!confirm('히스토리를 모두 삭제할까요?')) return;
+        consultHistory = [];
+        localStorage.removeItem('ai_history');
+        updateHistoryBadge();
+        renderHistoryList();
+    }
+
+    /* ===== 별점 ===== */
+    function rateStar(v) {
+        document.querySelectorAll('.star').forEach(s => {
+            s.innerText = parseInt(s.dataset.v) <= v ? '★' : '☆';
+            s.style.color = parseInt(s.dataset.v) <= v ? '#f59e0b' : '';
+        });
+        showToast(`${v}점 평가 감사합니다! ⭐`);
+    }
+
+    /* ===== 복사 ===== */
+    function copyResult() {
+        const summary = document.getElementById('r-summary-text').innerText;
+        const oneliner = document.getElementById('r-oneliner-text').innerText;
+        const solutions = document.getElementById('r-solutions-text').innerText;
+        const text = `[일상 AI 콘설턴트]\n\n📋 핵심 요약\n${summary}\n\n💡 AI의 한마디\n"${oneliner}"\n\n✅ 해결책\n${solutions}`;
+        navigator.clipboard.writeText(text).then(() => showToast('클립보드에 복사되었습니다!')).catch(() => showToast('복사 실패. 직접 선택해서 복사해주세요.'));
+    }
+
+    /* ===== 유틸 ===== */
+    function show(id) { document.getElementById(id).style.display = 'block'; }
+    function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+    let toastTimer;
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-msg').innerText = msg;
+        t.classList.remove('hidden');
+        lucide.createIcons();
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+</script>
+</body>
+</html>
