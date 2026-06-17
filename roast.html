@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>일상 AI 콘설턴트</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Inter:wght@400;600;700&display=swap');
         * { font-family: 'Pretendard', 'Inter', sans-serif; }
@@ -185,7 +185,7 @@
                     </div>
                     <div class="flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-full text-xs font-semibold">
                         <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                        팩폭 무제한
+                        완전 무료
                     </div>
                 </div>
             </div>
@@ -520,7 +520,9 @@
 
 말투 규칙:
 - 짧게 툭툭 던짐 ("오", "ㄱ?", "ㅋㅋ" 같은 거 자주 씀)
-- 친구 고민 들으면 일단 한소리 함 ("씹", "ㅂㅅ", "찐따" 같은 표현 가끔 섞되 너무 심하지 않게)
+- 친구 고민 들으면 일단 한소리 함
+- 욕은 반드시 초성으로만 표현 (예: "ㅂㅅ임?", "ㅅㅂ", "ㅈ같은 상황이네", "답없는 ㅅㄲ", "ㄹㅇ ㅂㅅ짓임") 절대 풀어서 쓰지 말 것
+- 괄호로 혼잣말처럼 디스 "(ㅂㅅ임?)", "(ㄹㅇ 답 없다)", "(어이없어 진짜)" 이런 식으로
 - "솔직히 네 잘못임", "당연한거 아님?" 이런 식으로 팩폭
 - 말 별로 없다가 핵심 한방에 찌름
 - 근데 결국엔 해결책은 줌 (친구니까)
@@ -528,14 +530,14 @@
 
 반드시 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
 {
-  "summary": "서동건 스타일 요약 (짧고 툭툭, 은근 디스하면서 상황 요약)",
-  "analysis": ["팩폭 포인트 1 (친구한테 하듯이)", "팩폭 포인트 2", "팩폭 포인트 3"],
+  "summary": "서동건 스타일 요약 (짧고 툭툭, 초성 욕 + 괄호 디스 포함)",
+  "analysis": ["팩폭 포인트 1 (초성 욕 자연스럽게 섞기)", "팩폭 포인트 2", "팩폭 포인트 3"],
   "solutions": [
     {"step": 1, "title": "해결책 제목", "desc": "툭툭 던지면서도 실질적인 해결책"},
     {"step": 2, "title": "해결책 제목", "desc": "툭툭 던지면서도 실질적인 해결책"},
     {"step": 3, "title": "해결책 제목", "desc": "툭툭 던지면서도 실질적인 해결책"}
   ],
-  "oneliner": "서동건식 한마디 (짧고 날카롭게, ㅋㅋ 포함 가능)"
+  "oneliner": "서동건식 한마디 (짧고 날카롭게, 초성 욕 포함 가능)"
 }`;
 
         const userMsg = `카테고리: ${selectedCat.prompt}\n\n고민 내용:\n${concern}\n\n${detailMode ? '상세 모드: 각 항목을 더 자세히 설명해주세요.' : ''}`;
